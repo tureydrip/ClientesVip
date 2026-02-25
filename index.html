@@ -166,6 +166,33 @@
             background: rgba(188, 19, 254, 0.1);
         }
 
+        /* --- BOTÓN HISTORIAL (NUEVO) --- */
+        .btn-history {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(20, 0, 30, 0.8);
+            border: 1px solid var(--neon-purple);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 12px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(188, 19, 254, 0.3);
+            transition: all 0.3s ease;
+            z-index: 100;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn-history:hover {
+            background: rgba(188, 19, 254, 0.2);
+            box-shadow: 0 0 20px var(--neon-purple);
+            transform: scale(1.05);
+        }
+
         /* =========================================
            3. ESTILOS DE LOS MODALES
            ========================================= */
@@ -361,7 +388,12 @@
         }
     </style>
 </head>
-<body oncontextmenu="return false;"> <canvas id="particle-canvas"></canvas>
+<body oncontextmenu="return false;"> 
+    <canvas id="particle-canvas"></canvas>
+
+    <button class="btn-history" onclick="window.location.href='historial.html'">
+        📜 Historial
+    </button>
 
     <div class="container">
         <h2>Tienda de Keys<br><span style="font-size:0.6em; color:#fff; opacity:0.8;">LUCK XIT</span></h2>
