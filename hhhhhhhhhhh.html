@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Admin Panel - Reparado</title>
+    <title>Admin Panel - Reparado y Actualizado</title>
     <link rel="stylesheet" href="style.css">
     <style>
         .debug-box {
@@ -98,7 +98,7 @@ EFGH-5678, IJKL-9012"></textarea>
             
             <input type="number" id="amountAdd" placeholder="Cantidad a sumar (USD)" step="0.1">
             <button onclick="addBalance()">Añadir Saldo</button>
-            <p id="adminMsg"></p>
+            <p id="adminMsg" style="margin-top: 10px; font-weight: bold;"></p>
         </div>
 
         <button class="back-btn" onclick="window.location.href='dashboard.html'">Volver al Dashboard</button>
@@ -266,13 +266,6 @@ EFGH-5678, IJKL-9012"></textarea>
             
             if(!prodId || !rawText) return alert("Selecciona producto y escribe keys");
 
-            // --- AQUÍ ESTÁ EL CAMBIO SOLICITADO ---
-            // split(/[\n,\s]+/) hace lo siguiente:
-            // \n : Rompe si hay salto de línea (columnas)
-            // ,  : Rompe si hay una coma
-            // \s : Rompe si hay un espacio en blanco
-            // Esto asegura que si pones "Key1 Key2" las separe en dos.
-            
             const cleanKeys = rawText
                 .split(/[\n,\s]+/) // Divide por Enter, Coma o Espacio
                 .map(k => k.trim()) // Limpia espacios residuales
@@ -297,7 +290,7 @@ EFGH-5678, IJKL-9012"></textarea>
                 .catch(e => logError("Error al guardar keys: " + e.message));
         };
 
-        // --- 6. AÑADIR SALDO ---
+        // --- 6. AÑADIR SALDO (ACTUALIZADO PARA HISTORIAL) ---
         window.addBalance = async () => {
             const targetUser = document.getElementById('userSearch').value.trim();
             const amount = parseFloat(document.getElementById('amountAdd').value);
@@ -306,12 +299,14 @@ EFGH-5678, IJKL-9012"></textarea>
             if(!targetUser || isNaN(amount)) return alert("Datos inválidos");
 
             msg.innerText = "Buscando usuario...";
+            msg.style.color = "#fff";
             
             try {
                 const snapshot = await get(ref(db, 'users'));
                 let foundUid = null;
                 let currentBal = 0;
 
+                // Buscar el ID del usuario predictivo
                 snapshot.forEach(childSnap => {
                     if(childSnap.val().username === targetUser) {
                         foundUid = childSnap.key;
@@ -321,17 +316,31 @@ EFGH-5678, IJKL-9012"></textarea>
 
                 if(foundUid) {
                     const newBal = (currentBal + amount).toFixed(2);
-                    await update(ref(db, `users/${foundUid}`), { balance: parseFloat(newBal) });
-                    msg.innerText = `Saldo actualizado a $${newBal}`;
-                    msg.className = "success";
+                    
+                    // --- NUEVO: REGISTRO PARA EL HISTORIAL ---
+                    const newRechargeRef = push(ref(db, `users/${foundUid}/recharges`));
+                    
+                    const updates = {};
+                    updates[`users/${foundUid}/balance`] = parseFloat(newBal); // Actualiza el saldo
+                    updates[`users/${foundUid}/recharges/${newRechargeRef.key}`] = { // Guarda el recibo
+                        amount: amount,
+                        date: Date.now()
+                    };
+
+                    await update(ref(db), updates);
+                    // -----------------------------------------
+
+                    msg.innerText = `Saldo actualizado a $${newBal} y registrado en el historial.`;
+                    msg.style.color = "#2ecc71"; // Verde éxito
                     document.getElementById('amountAdd').value = '';
                 } else {
                     msg.innerText = "Usuario no encontrado";
-                    msg.className = "error";
+                    msg.style.color = "#e74c3c"; // Rojo error
                 }
             } catch (e) {
                 logError(e.message);
                 msg.innerText = "Error de conexión";
+                msg.style.color = "#e74c3c";
             }
         };
     </script>
