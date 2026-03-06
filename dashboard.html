@@ -22,6 +22,7 @@
         :root {
             --neon-purple: #bc13fe;
             --neon-red: #ff073a;
+            --telegram-blue: #0088cc; /* Color oficial de Telegram */
             --glass-bg: rgba(20, 0, 30, 0.6);
         }
 
@@ -91,7 +92,7 @@
         h1 span {
             color: var(--neon-red);
             text-shadow: 0 0 15px var(--neon-red);
-            display: block; /* IMPORTANTE: Esto pone el nombre debajo */
+            display: block; 
             font-size: 1.3em;
             margin-top: 10px; 
             min-height: 1.3em; 
@@ -142,6 +143,20 @@
             transform: scale(0.98);
         }
 
+        /* --- NUEVO: BOTÓN TELEGRAM --- */
+        #telegramBtn {
+            background: linear-gradient(135deg, #00d2d3 0%, var(--telegram-blue) 100%);
+            box-shadow: 0 0 15px rgba(0, 136, 204, 0.4);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        #telegramBtn:hover {
+            box-shadow: 0 0 25px var(--telegram-blue), 0 0 5px #fff;
+        }
+
         /* Botón Admin */
         #adminBtn {
             background: linear-gradient(135deg, #8e44ad 0%, #3498db 100%);
@@ -186,6 +201,10 @@
         
         <button class="neon-btn" onclick="window.location.href='index.html'">
             Comprar Productos
+        </button>
+
+        <button id="telegramBtn" class="neon-btn" onclick="window.location.href='telegram.html'">
+            ✈️ Autorizar ID (Telegram)
         </button>
         
         <button id="adminBtn" class="neon-btn" style="display:none;" onclick="window.location.href='admin.html'">
