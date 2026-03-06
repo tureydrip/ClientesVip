@@ -101,26 +101,26 @@
         <button class="back-btn" onclick="window.location.href='dashboard.html'">Volver al Panel</button>
     </div>
 
-    <script type="module">
-        import { auth, db, onAuthStateChanged, ref, set, remove, onValue } from './firebase-config.js';
+                                        <script type="module">
+        import { auth, db, onAuthStateChanged, ref, set, get } from './firebase-config.js';
 
         let currentUser = null;
 
         onAuthStateChanged(auth, (user) => {
             if (user) {
                 currentUser = user;
-                loadAuthorizedIds(); // Carga automática en tiempo real
+                loadAuthorizedIds(); // Carga la lista al iniciar
             } else {
                 window.location.href = "login.html";
             }
         });
 
         // 1. Mostrar pantalla de carga
-        function showProcessing(text) {
+        window.showProcessing = function(text) {
             document.getElementById('loaderText').innerText = text;
             document.getElementById('loader').style.display = 'flex';
         }
-        function hideProcessing() {
+        window.hideProcessing = function() {
             document.getElementById('loader').style.display = 'none';
         }
 
@@ -131,10 +131,10 @@
 
             showProcessing("Encriptando y Autorizando ID...");
 
-            // Retardo para que se vea profesional (1.5 segundos)
+            // Retardo para que se vea profesional
             setTimeout(async () => {
                 try {
-                    // Guardamos en la base de datos general para que el bot lo encuentre rápido
+                    // Guardamos en la base de datos general para que el bot lo encuentre
                     await set(ref(db, `telegram_auth/${tgId}`), currentUser.uid);
                     // Guardamos en el perfil del usuario para el historial web
                     await set(ref(db, `users/${currentUser.uid}/telegram_ids/${tgId}`), {
@@ -144,31 +144,43 @@
                     
                     document.getElementById('tgIdInput').value = "";
                     hideProcessing();
+                    loadAuthorizedIds(); // Recargamos la lista para que aparezca
                 } catch(e) {
-                    alert("Error de sistema");
+                    console.error(e);
+                    alert("Error de sistema al guardar.");
                     hideProcessing();
                 }
             }, 1500);
         };
 
-        // 3. Quitar autorización
+        // 3. Quitar autorización (Usamos set con null porque no tienes 'remove' exportado)
         window.revokeId = async (tgId) => {
             showProcessing("Revocando acceso al Bot...");
             
             setTimeout(async () => {
-                await remove(ref(db, `telegram_auth/${tgId}`));
-                await remove(ref(db, `users/${currentUser.uid}/telegram_ids/${tgId}`));
-                hideProcessing();
+                try {
+                    await set(ref(db, `telegram_auth/${tgId}`), null);
+                    await set(ref(db, `users/${currentUser.uid}/telegram_ids/${tgId}`), null);
+                    hideProcessing();
+                    loadAuthorizedIds(); // Recargamos la lista para que desaparezca
+                } catch(e) {
+                    console.error(e);
+                    alert("Error al intentar revocar el ID.");
+                    hideProcessing();
+                }
             }, 1000);
         };
 
-        // 4. Leer en TIEMPO REAL
-        function loadAuthorizedIds() {
-            const listRef = ref(db, `users/${currentUser.uid}/telegram_ids`);
+        // 4. Leer los IDs autorizados
+        window.loadAuthorizedIds = async () => {
+            const container = document.getElementById('authorizedList');
+            container.innerHTML = "<p style='text-align:center; color:#666;'>Cargando red...</p>";
             
-            onValue(listRef, (snapshot) => {
-                const container = document.getElementById('authorizedList');
-                container.innerHTML = "";
+            try {
+                const listRef = ref(db, `users/${currentUser.uid}/telegram_ids`);
+                const snapshot = await get(listRef);
+                
+                container.innerHTML = ""; // Limpiamos el mensaje de carga
 
                 if(snapshot.exists()) {
                     snapshot.forEach(child => {
@@ -187,10 +199,14 @@
                         `;
                     });
                 } else {
-                    container.innerHTML = "<p style='text-align:center; color:#666;'>Ningún bot autorizado aún.</p>";
+                    container.innerHTML = "<p style='text-align:center; color:#666;'>Ningún dispositivo autorizado aún.</p>";
                 }
-            });
+            } catch(e) {
+                console.error(e);
+                container.innerHTML = "<p style='text-align:center; color:red;'>Error al cargar el historial.</p>";
+            }
         }
     </script>
+
 </body>
 </html>
